@@ -11,6 +11,8 @@ type EmployeeRepository interface {
 	CreateEmployee(ctx context.Context, employee *Employee) error
 
 	GetEmployees(ctx context.Context, limit, offet int) ([]Employee, int, error)
+
+	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
 }
 
 type employeeRepository struct {
@@ -77,4 +79,19 @@ func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet 
 	}
 
 	return employees, totalCount, nil
+}
+
+// GetEmployeeById implements [EmployeeRepository].
+func (e *employeeRepository) GetEmployeeById(ctx context.Context, id int) (*Employee, error) {
+	query := "SELECT id, name, age, position, department_id, salary FROM employees WHERE id = ? AND deleted_at IS NULL"
+	row := e.db.QueryRowContext(ctx, query, id)
+
+	var employee Employee
+	err := row.Scan(&employee.Id, &employee.Name, &employee.Age, &employee.Position, &employee.DepartmentId, &employee.Salary)
+	if err != nil {
+		LogError(LogErrScan, err)
+		return nil, err
+	}
+
+	return &employee, nil
 }
