@@ -11,10 +11,21 @@ const (
 	ErrFailedToCreateEmployee = "Failed to create employee"
 	ErrLastInsertId           = "Can't get last insert id"
 
+	ErrPageOrLimitInvalid = "Invalid page or limit parameter"
+
 	// Employee validation
 	ErrEmployeeNameEmpty     = "Employee name must not be empty"
 	ErrEmployeeAgeInvalid    = "Employee age must be greater than 0"
 	ErrEmployeeSalaryInvalid = "Employee salary must be greater than 0"
 	ErrAgeMustBePositive     = "Age must be >= 0"
 	ErrSalaryMustBePositive  = "Salary must be >= 0"
+
+	// Log messages
+	LogErrPrepareStatement = "Prepare statement error: %v\n"
+	LogErrExecuteStatement = "Execute statement error: %v\n"
+	LogErrScan             = "Scan error:"
+	LogErrQuery            = "Query error"
+
+	// Log Empty
+	ErrEmpty = "No Employee found"
 )
