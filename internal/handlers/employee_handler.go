@@ -78,7 +78,6 @@ func (h *EmployeeHandler) GetEmployeeById(w http.ResponseWriter, r *http.Request
 	}
 
 	employeeId, err := strconv.Atoi(r.PathValue("id"))
-
 	if err != nil {
 		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
 		return
@@ -92,4 +91,33 @@ func (h *EmployeeHandler) GetEmployeeById(w http.ResponseWriter, r *http.Request
 	}
 
 	ResponseSuccess(w, http.StatusOK, employee)
+}
+
+func (h *EmployeeHandler) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		ResponseWithError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
+		return
+	}
+
+	employeeId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
+		return
+	}
+
+	var req UpdateEmployeeRequest
+	defer r.Body.Close()
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		ResponseWithError(w, http.StatusBadRequest, ErrInvalidRequestBody)
+		return
+	}
+
+	err = h.service.UpdateEmployee(r.Context(), employeeId, req)
+	if err != nil {
+		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, http.StatusNoContent, nil)
 }
