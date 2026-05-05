@@ -31,7 +31,7 @@ func (h *EmployeeHandler) CreateEmployee(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.service.CreateEmployee(r.Context(), emp)
+	err = h.service.CreateEmployee(r.Context(), &emp)
 	if err != nil {
 		RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
