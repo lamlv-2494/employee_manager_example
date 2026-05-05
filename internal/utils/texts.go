@@ -11,10 +11,13 @@ const (
 	ErrFailedToCreateEmployee = "Failed to create employee"
 	ErrLastInsertId           = "Can't get last insert id"
 
+	// Invalid error
 	ErrPageOrLimitInvalid = "Invalid page or limit parameter"
+	ErrInvalidEmployeeId  = "Invalid employee ID"
+	ErrInvalidRequestBody = "Invalid request body"
 
 	// Employee validation
-	ErrInvalidEmployeeId     = "Invalid employee ID"
+
 	ErrEmployeeNameEmpty     = "Employee name must not be empty"
 	ErrEmployeeAgeInvalid    = "Employee age must be greater than 0"
 	ErrEmployeeSalaryInvalid = "Employee salary must be greater than 0"
@@ -28,5 +31,6 @@ const (
 	LogErrQuery            = "Query error"
 
 	// Log Empty
-	ErrEmpty = "No Employee found"
+	ErrEmpty         = "No Employee found"
+	ErrNoFieldUpdate = "No fields to update"
 )

@@ -15,6 +15,8 @@ type EmployeeService interface {
 	GetEmployees(ctx context.Context, page, limit int) ([]Employee, int, error)
 
 	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
+
+	UpdateEmployee(ctx context.Context, id int, req UpdateEmployeeRequest) error
 }
 
 type employeeService struct {
@@ -72,4 +74,13 @@ func (e *employeeService) GetEmployeeById(ctx context.Context, id int) (*Employe
 		return nil, errors.New(ErrEmpty)
 	}
 	return employee, nil
+}
+
+// UpdateEmployee implements [EmployeeService].
+func (e *employeeService) UpdateEmployee(ctx context.Context, id int, req UpdateEmployeeRequest) error {
+	err := e.repo.UpdateEmployee(ctx, id, &req)
+	if err != nil {
+		return err
+	}
+	return nil
 }

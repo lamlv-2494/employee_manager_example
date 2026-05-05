@@ -76,6 +76,8 @@ func registerEmployeeRoutes(mux *http.ServeMux, handler *handlers.EmployeeHandle
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetEmployeeById(w, r)
+		case http.MethodPut:
+			handler.UpdateEmployee(w, r)
 		default:
 			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
 			return

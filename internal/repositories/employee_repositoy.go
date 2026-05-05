@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	. "employee_manager_example/internal/models"
 	. "employee_manager_example/internal/utils"
+	"errors"
+	"strings"
 )
 
 type EmployeeRepository interface {
@@ -13,6 +15,8 @@ type EmployeeRepository interface {
 	GetEmployees(ctx context.Context, limit, offet int) ([]Employee, int, error)
 
 	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
+
+	UpdateEmployee(ctx context.Context, id int, req *UpdateEmployeeRequest) error
 }
 
 type employeeRepository struct {
@@ -94,4 +98,64 @@ func (e *employeeRepository) GetEmployeeById(ctx context.Context, id int) (*Empl
 	}
 
 	return &employee, nil
+}
+
+// UpdateEmployee implements [EmployeeRepository].
+func (e *employeeRepository) UpdateEmployee(ctx context.Context, id int, req *UpdateEmployeeRequest) error {
+	if req == nil {
+		return errors.New(ErrNoFieldUpdate)
+	}
+
+	var setClauses []string
+	var args []any
+
+	if req.Name != nil {
+		setClauses = append(setClauses, "name = ?")
+		args = append(args, *req.Name)
+	}
+
+	if req.Age != nil {
+		setClauses = append(setClauses, "age = ?")
+		args = append(args, *req.Age)
+	}
+
+	if req.Position != nil {
+		setClauses = append(setClauses, "position = ?")
+		args = append(args, *req.Position)
+	}
+
+	if req.DepartmentId != nil {
+		setClauses = append(setClauses, "department_id = ?")
+		args = append(args, *req.DepartmentId)
+	}
+
+	if req.Salary != nil {
+		setClauses = append(setClauses, "salary = ?")
+		args = append(args, *req.Salary)
+	}
+
+	setClause := strings.Join(setClauses, ", ") // "name = ?, age = ?"
+
+	if setClause == "" {
+		return errors.New(ErrNoFieldUpdate)
+	}
+
+	query := "UPDATE employees SET " + setClause + " WHERE id = ? AND deleted_at IS NULL"
+	args = append(args, id)
+
+	result, err := e.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	affect, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affect == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }
