@@ -71,4 +71,14 @@ func registerEmployeeRoutes(mux *http.ServeMux, handler *handlers.EmployeeHandle
 			return
 		}
 	})
+
+	mux.HandleFunc("/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.GetEmployeeById(w, r)
+		default:
+			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+			return
+		}
+	})
 }

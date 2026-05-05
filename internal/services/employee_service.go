@@ -13,6 +13,8 @@ type EmployeeService interface {
 	CreateEmployee(ctx context.Context, emp *Employee) error
 
 	GetEmployees(ctx context.Context, page, limit int) ([]Employee, int, error)
+
+	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
 }
 
 type employeeService struct {
@@ -56,4 +58,18 @@ func (e *employeeService) GetEmployees(ctx context.Context, page int, limit int)
 	offset := (page - 1) * limit
 
 	return e.repo.GetEmployees(ctx, limit, offset)
+}
+
+// GetEmployeeById implements [EmployeeService].
+func (e *employeeService) GetEmployeeById(ctx context.Context, id int) (*Employee, error) {
+	employee, err := e.repo.GetEmployeeById(ctx, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if employee == nil {
+		return nil, errors.New(ErrEmpty)
+	}
+	return employee, nil
 }

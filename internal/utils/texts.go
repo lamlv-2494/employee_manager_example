@@ -14,6 +14,7 @@ const (
 	ErrPageOrLimitInvalid = "Invalid page or limit parameter"
 
 	// Employee validation
+	ErrInvalidEmployeeId     = "Invalid employee ID"
 	ErrEmployeeNameEmpty     = "Employee name must not be empty"
 	ErrEmployeeAgeInvalid    = "Employee age must be greater than 0"
 	ErrEmployeeSalaryInvalid = "Employee salary must be greater than 0"
