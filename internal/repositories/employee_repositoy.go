@@ -9,6 +9,8 @@ import (
 
 type EmployeeRepository interface {
 	CreateEmployee(ctx context.Context, employee *Employee) error
+
+	GetEmployees(ctx context.Context, limit, offet int) ([]Employee, int, error)
 }
 
 type employeeRepository struct {
@@ -37,4 +39,42 @@ func (e *employeeRepository) CreateEmployee(ctx context.Context, employee *Emplo
 	employee.Id = int(id)
 
 	return nil
+}
+
+// GetEmployees implements [EmployeeRepository].
+func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet int) ([]Employee, int, error) {
+	// Count total employees in DB
+	var totalCount int
+
+	countQuery := "SELECT COUNT(id) FROM employees WHERE deleted_at IS NULL"
+	err := e.db.QueryRowContext(ctx, countQuery).Scan(&totalCount)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if totalCount == 0 {
+		return []Employee{}, 0, nil
+	}
+
+	// Get employees from DB
+	query := "SELECT id, name, age, position, department_id, salary FROM employees WHERE deleted_at IS NULL LIMIT ? OFFSET ?"
+	rows, err := e.db.QueryContext(ctx, query, limit, offet)
+	if LogError(LogErrQuery, err) {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var employees []Employee
+
+	for rows.Next() {
+		var employee Employee
+		err := rows.Scan(&employee.Id, &employee.Name, &employee.Age, &employee.Position, &employee.DepartmentId, &employee.Salary)
+		if LogError(LogErrScan, err) {
+			return nil, 0, err
+		}
+		employees = append(employees, employee)
+	}
+
+	return employees, totalCount, nil
 }

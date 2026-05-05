@@ -65,7 +65,7 @@ func registerEmployeeRoutes(mux *http.ServeMux, handler *handlers.EmployeeHandle
 		case http.MethodPost:
 			handler.CreateEmployee(w, r)
 		case http.MethodGet:
-			// Handle fetching employees
+			handler.GetEmployees(w, r)
 		default:
 			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
 			return
