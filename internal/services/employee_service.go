@@ -10,7 +10,7 @@ import (
 )
 
 type EmployeeService interface {
-	CreateEmployee(ctx context.Context, emp Employee) error
+	CreateEmployee(ctx context.Context, emp *Employee) error
 }
 
 type employeeService struct {
@@ -22,7 +22,7 @@ func NewEmployeeService(repo repositories.EmployeeRepository) EmployeeService {
 }
 
 // CreateEmployee implements [EmployeeService].
-func (e *employeeService) CreateEmployee(ctx context.Context, emp Employee) error {
+func (e *employeeService) CreateEmployee(ctx context.Context, emp *Employee) error {
 	emp.Name = strings.TrimSpace(emp.Name)
 	if emp.Name == "" {
 		return errors.New(ErrEmployeeNameEmpty)
@@ -34,7 +34,7 @@ func (e *employeeService) CreateEmployee(ctx context.Context, emp Employee) erro
 		return errors.New(ErrEmployeeSalaryInvalid)
 	}
 
-	err := e.repo.CreateEmployee(ctx, &emp)
+	err := e.repo.CreateEmployee(ctx, emp)
 
 	if err != nil {
 		return err
