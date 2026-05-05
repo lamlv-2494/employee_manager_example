@@ -17,6 +17,8 @@ type EmployeeService interface {
 	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
 
 	UpdateEmployee(ctx context.Context, id int, req UpdateEmployeeRequest) error
+
+	DeleteEmployee(ctx context.Context, id int) error
 }
 
 type employeeService struct {
@@ -79,6 +81,15 @@ func (e *employeeService) GetEmployeeById(ctx context.Context, id int) (*Employe
 // UpdateEmployee implements [EmployeeService].
 func (e *employeeService) UpdateEmployee(ctx context.Context, id int, req UpdateEmployeeRequest) error {
 	err := e.repo.UpdateEmployee(ctx, id, &req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteEmployee implements [EmployeeService].
+func (e *employeeService) DeleteEmployee(ctx context.Context, id int) error {
+	err := e.repo.DeleteEmployee(ctx, id)
 	if err != nil {
 		return err
 	}

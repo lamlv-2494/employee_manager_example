@@ -121,3 +121,21 @@ func (h *EmployeeHandler) UpdateEmployee(w http.ResponseWriter, r *http.Request)
 
 	ResponseSuccess(w, http.StatusNoContent, nil)
 }
+
+func (h *EmployeeHandler) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
+		return
+	}
+	employeeId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
+		return
+	}
+	err = h.service.DeleteEmployee(r.Context(), employeeId)
+	if err != nil {
+		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	ResponseSuccess(w, http.StatusNoContent, nil)
+}

@@ -78,6 +78,8 @@ func registerEmployeeRoutes(mux *http.ServeMux, handler *handlers.EmployeeHandle
 			handler.GetEmployeeById(w, r)
 		case http.MethodPut:
 			handler.UpdateEmployee(w, r)
+		case http.MethodDelete:
+			handler.DeleteEmployee(w, r)
 		default:
 			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
 			return

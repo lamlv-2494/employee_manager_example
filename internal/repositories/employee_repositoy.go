@@ -17,6 +17,8 @@ type EmployeeRepository interface {
 	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
 
 	UpdateEmployee(ctx context.Context, id int, req *UpdateEmployeeRequest) error
+
+	DeleteEmployee(ctx context.Context, id int) error
 }
 
 type employeeRepository struct {
@@ -157,5 +159,24 @@ func (e *employeeRepository) UpdateEmployee(ctx context.Context, id int, req *Up
 		return sql.ErrNoRows
 	}
 
+	return nil
+}
+
+// DeleteEmployee implements [EmployeeRepository].
+func (e *employeeRepository) DeleteEmployee(ctx context.Context, id int) error {
+	query := "UPDATE employees SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL"
+	result, err := e.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	affect, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affect == 0 {
+		return sql.ErrNoRows
+	}
 	return nil
 }
