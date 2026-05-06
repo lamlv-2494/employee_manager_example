@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
+	"os"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -9,13 +12,39 @@ import (
 	"employee_manager_example/internal/middleware"
 	"employee_manager_example/internal/repositories"
 	"employee_manager_example/internal/services"
-	. "employee_manager_example/internal/utils"
+	"employee_manager_example/internal/texts"
 	"log"
 	"net/http"
 	"time"
 )
 
+func loadEnv(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		os.Setenv(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
+	}
+	return scanner.Err()
+}
+
 func main() {
+	if err := loadEnv(".env"); err != nil {
+		log.Printf("Warning: could not load .env file: %v", err)
+	}
+
 	db := setupMySQL()
 	employeeRepo := repositories.NewEmployeeRepository(db)
 	employeeService := services.NewEmployeeService(employeeRepo)
@@ -30,21 +59,31 @@ func main() {
 		DepartmentHandler: departmentHandler,
 	}
 
+	defer db.Close()
 	setupServerMux(appHandlers)
-	db.Close()
 }
 
 func setupMySQL() *sql.DB {
-	dsn := "root:@tcp(127.0.0.1:3306)/employee_management?parseTime=true"
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	if host == "" || port == "" || user == "" || dbName == "" {
+		log.Fatal("Missing required database environment variables")
+	}
+
+	dsn := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + dbName + "?parseTime=true"
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatalf("%v, error: %v", ErrCanNotOpenDB, err)
+		log.Fatalf("%v, error: %v", texts.CanNotOpenDB, err)
 	}
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatalf("%v, error: %v", ErrCanNotConnectDB, err)
+		log.Fatalf("%v, error: %v", texts.CanNotConnectDB, err)
 	}
 
 	db.SetMaxOpenConns(25)
@@ -61,7 +100,7 @@ func setupServerMux(appHandler *handlers.AppHandler) {
 	loggedMux := middleware.LoggingMiddleware(mux)
 	err := http.ListenAndServe(":8080", loggedMux)
 	if err != nil {
-		log.Fatalf("%v, error: %v", ErrServerError, err)
+		log.Fatalf("%v, error: %v", texts.ServerError, err)
 	}
 }
 
@@ -73,7 +112,17 @@ func registerEmployeeRoutes(mux *http.ServeMux, handler *handlers.EmployeeHandle
 		case http.MethodGet:
 			handler.GetEmployees(w, r)
 		default:
-			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+			http.Error(w, texts.MethodNotAllowed, http.StatusMethodNotAllowed)
+			return
+		}
+	})
+
+	mux.HandleFunc("/employees/search", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.GetEmployees(w, r)
+		default:
+			http.Error(w, texts.MethodNotAllowed, http.StatusMethodNotAllowed)
 			return
 		}
 	})
@@ -87,17 +136,7 @@ func registerEmployeeRoutes(mux *http.ServeMux, handler *handlers.EmployeeHandle
 		case http.MethodDelete:
 			handler.DeleteEmployee(w, r)
 		default:
-			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
-			return
-		}
-	})
-
-	mux.HandleFunc("/employees/search", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			handler.GetEmployees(w, r)
-		default:
-			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+			http.Error(w, texts.MethodNotAllowed, http.StatusMethodNotAllowed)
 			return
 		}
 	})
@@ -111,7 +150,7 @@ func registerDepartmentRoutes(mux *http.ServeMux, handler *handlers.DepartmentHa
 		case http.MethodPost:
 			handler.CreateDepartment(w, r)
 		default:
-			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+			http.Error(w, texts.MethodNotAllowed, http.StatusMethodNotAllowed)
 			return
 		}
 	})
@@ -121,7 +160,7 @@ func registerDepartmentRoutes(mux *http.ServeMux, handler *handlers.DepartmentHa
 		case http.MethodGet:
 			handler.GetEmployeesByDepartmentId(w, r)
 		default:
-			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+			http.Error(w, texts.MethodNotAllowed, http.StatusMethodNotAllowed)
 			return
 		}
 	})

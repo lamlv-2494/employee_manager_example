@@ -4,7 +4,7 @@ import (
 	"context"
 	. "employee_manager_example/internal/models"
 	"employee_manager_example/internal/repositories"
-	. "employee_manager_example/internal/utils"
+	"employee_manager_example/internal/texts"
 	"errors"
 	"strings"
 )
@@ -33,13 +33,13 @@ func NewEmployeeService(repo repositories.EmployeeRepository) EmployeeService {
 func (e *employeeService) CreateEmployee(ctx context.Context, emp *Employee) error {
 	emp.Name = strings.TrimSpace(emp.Name)
 	if emp.Name == "" {
-		return errors.New(ErrEmployeeNameEmpty)
+		return errors.New(texts.EmployeeNameEmpty)
 	}
 	if emp.Age <= 0 {
-		return errors.New(ErrEmployeeAgeInvalid)
+		return errors.New(texts.EmployeeAgeInvalid)
 	}
 	if emp.Salary <= 0 {
-		return errors.New(ErrEmployeeSalaryInvalid)
+		return errors.New(texts.EmployeeSalaryInvalid)
 	}
 
 	err := e.repo.CreateEmployee(ctx, emp)
@@ -73,7 +73,7 @@ func (e *employeeService) GetEmployeeById(ctx context.Context, id int) (*Employe
 	}
 
 	if employee == nil {
-		return nil, errors.New(ErrEmpty)
+		return nil, errors.New(texts.EmployeeNotFound)
 	}
 	return employee, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	. "employee_manager_example/internal/models"
+	"employee_manager_example/internal/texts"
 	. "employee_manager_example/internal/utils"
 	"errors"
 	"strings"
@@ -35,13 +36,13 @@ func (e *employeeRepository) CreateEmployee(ctx context.Context, employee *Emplo
 	// Insert new employee to DB
 	query := "INSERT INTO employees (name, age, position, department_id, salary) VALUES (?, ?, ?, ?, ?)"
 	res, err := e.db.ExecContext(ctx, query, employee.Name, employee.Age, employee.Position, employee.DepartmentId, employee.Salary)
-	if err != nil {
+	if LogError(texts.ExecuteContext, err) {
 		return err
 	}
 
 	// Get latest employee id
 	id, err := res.LastInsertId()
-	if LogError(ErrLastInsertId, err) {
+	if LogError(texts.LastInsertId, err) {
 		return err
 	}
 
@@ -70,7 +71,7 @@ func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet 
 	countQuery := "SELECT COUNT(id) FROM employees WHERE " + where
 	var totalCount int
 	err := e.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
-	if err != nil {
+	if LogError(texts.QueryRowErr, err) {
 		return nil, 0, err
 	}
 	if totalCount == 0 {
@@ -81,7 +82,7 @@ func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet 
 	query := "SELECT id, name, age, position, department_id, salary FROM employees WHERE " + where + " LIMIT ? OFFSET ?"
 	args = append(args, limit, offet)
 	rows, err := e.db.QueryContext(ctx, query, args...)
-	if LogError(LogErrQuery, err) {
+	if LogError(texts.QueryErr, err) {
 		return nil, 0, err
 	}
 	defer rows.Close()
@@ -91,7 +92,7 @@ func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet 
 	for rows.Next() {
 		var employee Employee
 		err := rows.Scan(&employee.Id, &employee.Name, &employee.Age, &employee.Position, &employee.DepartmentId, &employee.Salary)
-		if LogError(LogErrScan, err) {
+		if LogError(texts.ScanErr, err) {
 			return nil, 0, err
 		}
 		employees = append(employees, employee)
@@ -107,8 +108,7 @@ func (e *employeeRepository) GetEmployeeById(ctx context.Context, id int) (*Empl
 
 	var employee Employee
 	err := row.Scan(&employee.Id, &employee.Name, &employee.Age, &employee.Position, &employee.DepartmentId, &employee.Salary)
-	if err != nil {
-		LogError(LogErrScan, err)
+	if LogError(texts.ScanErr, err) {
 		return nil, err
 	}
 
@@ -118,7 +118,7 @@ func (e *employeeRepository) GetEmployeeById(ctx context.Context, id int) (*Empl
 // UpdateEmployee implements [EmployeeRepository].
 func (e *employeeRepository) UpdateEmployee(ctx context.Context, id int, req *UpdateEmployeeRequest) error {
 	if req == nil {
-		return errors.New(ErrNoFieldUpdate)
+		return errors.New(texts.NoFieldUpdate)
 	}
 
 	var setClauses []string
@@ -152,19 +152,19 @@ func (e *employeeRepository) UpdateEmployee(ctx context.Context, id int, req *Up
 	setClause := strings.Join(setClauses, ", ") // "name = ?, age = ?"
 
 	if setClause == "" {
-		return errors.New(ErrNoFieldUpdate)
+		return errors.New(texts.NoFieldUpdate)
 	}
 
 	query := "UPDATE employees SET " + setClause + " WHERE id = ? AND deleted_at IS NULL"
 	args = append(args, id)
 
 	result, err := e.db.ExecContext(ctx, query, args...)
-	if err != nil {
+	if LogError(texts.ExecuteContext, err) {
 		return err
 	}
 
 	affect, err := result.RowsAffected()
-	if err != nil {
+	if LogError(texts.RowsAffected, err) {
 		return err
 	}
 
@@ -179,12 +179,12 @@ func (e *employeeRepository) UpdateEmployee(ctx context.Context, id int, req *Up
 func (e *employeeRepository) DeleteEmployee(ctx context.Context, id int) error {
 	query := "UPDATE employees SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL"
 	result, err := e.db.ExecContext(ctx, query, id)
-	if err != nil {
+	if LogError(texts.ExecuteContext, err) {
 		return err
 	}
 
 	affect, err := result.RowsAffected()
-	if err != nil {
+	if LogError(texts.RowsAffected, err) {
 		return err
 	}
 
