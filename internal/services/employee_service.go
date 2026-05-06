@@ -12,7 +12,7 @@ import (
 type EmployeeService interface {
 	CreateEmployee(ctx context.Context, emp *Employee) error
 
-	GetEmployees(ctx context.Context, page, limit int) ([]Employee, int, error)
+	GetEmployees(ctx context.Context, page, limit int, keyword, position string) ([]Employee, int, error)
 
 	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
 
@@ -51,7 +51,7 @@ func (e *employeeService) CreateEmployee(ctx context.Context, emp *Employee) err
 }
 
 // GetEmployees implements [EmployeeService].
-func (e *employeeService) GetEmployees(ctx context.Context, page int, limit int) ([]Employee, int, error) {
+func (e *employeeService) GetEmployees(ctx context.Context, page, limit int, keyword, position string) ([]Employee, int, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -61,7 +61,7 @@ func (e *employeeService) GetEmployees(ctx context.Context, page int, limit int)
 
 	offset := (page - 1) * limit
 
-	return e.repo.GetEmployees(ctx, limit, offset)
+	return e.repo.GetEmployees(ctx, limit, offset, keyword, position)
 }
 
 // GetEmployeeById implements [EmployeeService].

@@ -12,7 +12,8 @@ import (
 type EmployeeRepository interface {
 	CreateEmployee(ctx context.Context, employee *Employee) error
 
-	GetEmployees(ctx context.Context, limit, offet int) ([]Employee, int, error)
+	// Get All or search employees by name and position
+	GetEmployees(ctx context.Context, limit, offet int, keyword, position string) ([]Employee, int, error)
 
 	GetEmployeeById(ctx context.Context, id int) (*Employee, error)
 
@@ -50,24 +51,36 @@ func (e *employeeRepository) CreateEmployee(ctx context.Context, employee *Emplo
 }
 
 // GetEmployees implements [EmployeeRepository].
-func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet int) ([]Employee, int, error) {
+func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet int, keyword, position string) ([]Employee, int, error) {
 	// Count total employees in DB
+	var whereClause []string
+	var args []any
+
+	whereClause = append(whereClause, "deleted_at IS NULL")
+	if keyword != "" {
+		whereClause = append(whereClause, "name LIKE ?")
+		args = append(args, "%"+keyword+"%")
+	}
+	if position != "" {
+		whereClause = append(whereClause, "position LIKE ?")
+		args = append(args, "%"+position+"%")
+	}
+	where := strings.Join(whereClause, " AND ")
+
+	countQuery := "SELECT COUNT(id) FROM employees WHERE " + where
 	var totalCount int
-
-	countQuery := "SELECT COUNT(id) FROM employees WHERE deleted_at IS NULL"
-	err := e.db.QueryRowContext(ctx, countQuery).Scan(&totalCount)
-
+	err := e.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
 	if err != nil {
 		return nil, 0, err
 	}
-
 	if totalCount == 0 {
 		return []Employee{}, 0, nil
 	}
 
 	// Get employees from DB
-	query := "SELECT id, name, age, position, department_id, salary FROM employees WHERE deleted_at IS NULL LIMIT ? OFFSET ?"
-	rows, err := e.db.QueryContext(ctx, query, limit, offet)
+	query := "SELECT id, name, age, position, department_id, salary FROM employees WHERE " + where + " LIMIT ? OFFSET ?"
+	args = append(args, limit, offet)
+	rows, err := e.db.QueryContext(ctx, query, args...)
 	if LogError(LogErrQuery, err) {
 		return nil, 0, err
 	}
