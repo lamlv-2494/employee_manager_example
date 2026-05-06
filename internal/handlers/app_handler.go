@@ -1,5 +1,6 @@
 package handlers
 
 type AppHandler struct {
-	EmployeeHandler *EmployeeHandler
+	EmployeeHandler   *EmployeeHandler
+	DepartmentHandler *DepartmentHandler
 }

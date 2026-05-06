@@ -10,6 +10,7 @@ const (
 
 	ErrFailedToCreateEmployee = "Failed to create employee"
 	ErrLastInsertId           = "Can't get last insert id"
+	ErrParseErr               = "Parse error"
 
 	// Invalid error
 	ErrPageOrLimitInvalid = "Invalid page or limit parameter"
@@ -17,12 +18,14 @@ const (
 	ErrInvalidRequestBody = "Invalid request body"
 
 	// Employee validation
-
 	ErrEmployeeNameEmpty     = "Employee name must not be empty"
 	ErrEmployeeAgeInvalid    = "Employee age must be greater than 0"
 	ErrEmployeeSalaryInvalid = "Employee salary must be greater than 0"
 	ErrAgeMustBePositive     = "Age must be >= 0"
 	ErrSalaryMustBePositive  = "Salary must be >= 0"
+
+	// Department validation
+	ErrDepartmentNameEmpty = "Department name must not be empty"
 
 	// Log messages
 	LogErrPrepareStatement = "Prepare statement error: %v\n"
