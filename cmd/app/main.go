@@ -21,8 +21,13 @@ func main() {
 	employeeService := services.NewEmployeeService(employeeRepo)
 	employeeHander := handlers.NewEmployeeHandler(employeeService)
 
+	departmentRepo := repositories.NewDepartmentRepository(db)
+	departmentService := services.NewDepartmentService(departmentRepo)
+	departmentHandler := handlers.NewDepartmentHandler(departmentService)
+
 	appHandlers := &handlers.AppHandler{
-		EmployeeHandler: employeeHander,
+		EmployeeHandler:   employeeHander,
+		DepartmentHandler: departmentHandler,
 	}
 
 	setupServerMux(appHandlers)
@@ -51,6 +56,7 @@ func setupMySQL() *sql.DB {
 func setupServerMux(appHandler *handlers.AppHandler) {
 	mux := http.NewServeMux()
 	registerEmployeeRoutes(mux, appHandler.EmployeeHandler)
+	registerDepartmentRoutes(mux, appHandler.DepartmentHandler)
 
 	loggedMux := middleware.LoggingMiddleware(mux)
 	err := http.ListenAndServe(":8080", loggedMux)
@@ -80,6 +86,30 @@ func registerEmployeeRoutes(mux *http.ServeMux, handler *handlers.EmployeeHandle
 			handler.UpdateEmployee(w, r)
 		case http.MethodDelete:
 			handler.DeleteEmployee(w, r)
+		default:
+			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+			return
+		}
+	})
+}
+
+func registerDepartmentRoutes(mux *http.ServeMux, handler *handlers.DepartmentHandler) {
+	mux.HandleFunc("/departments", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.GetDepartments(w, r)
+		case http.MethodPost:
+			handler.CreateDepartment(w, r)
+		default:
+			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+			return
+		}
+	})
+
+	mux.HandleFunc("/departments/{id}/employees", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.GetEmployeesByDepartmentId(w, r)
 		default:
 			http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
 			return
