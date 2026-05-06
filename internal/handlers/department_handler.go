@@ -19,7 +19,7 @@ func NewDepartmentHandler(service services.DepartmentService) *DepartmentHandler
 
 func (h *DepartmentHandler) CreateDepartment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
 		return
 	}
 
@@ -28,13 +28,13 @@ func (h *DepartmentHandler) CreateDepartment(w http.ResponseWriter, r *http.Requ
 
 	err := json.NewDecoder(r.Body).Decode(&department)
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, err.Error())
+		ResponseError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.service.CreateDepartment(r.Context(), &department)
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, err.Error())
+		ResponseError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *DepartmentHandler) CreateDepartment(w http.ResponseWriter, r *http.Requ
 
 func (h *DepartmentHandler) GetDepartments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
 		return
 	}
 
@@ -51,13 +51,13 @@ func (h *DepartmentHandler) GetDepartments(w http.ResponseWriter, r *http.Reques
 	page, pageErr := strconv.Atoi(query.Get("page"))
 	limit, limitErr := strconv.Atoi(query.Get("limit"))
 	if pageErr != nil || limitErr != nil {
-		ResponseWithError(w, http.StatusBadRequest, ErrParseErr)
+		ResponseError(w, http.StatusBadRequest, ErrParseErr)
 
 	}
 
 	departments, totalCount, err := h.service.GetDepartments(r.Context(), page, limit)
 	if err != nil {
-		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *DepartmentHandler) GetDepartments(w http.ResponseWriter, r *http.Reques
 
 func (h *DepartmentHandler) GetEmployeesByDepartmentId(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
 		return
 	}
 
@@ -80,13 +80,13 @@ func (h *DepartmentHandler) GetEmployeesByDepartmentId(w http.ResponseWriter, r 
 	page, pageErr := strconv.Atoi(query.Get("page"))
 	limit, limitErr := strconv.Atoi(query.Get("limit"))
 	if departmentErr != nil || pageErr != nil || limitErr != nil {
-		ResponseWithError(w, http.StatusBadRequest, ErrParseErr)
+		ResponseError(w, http.StatusBadRequest, ErrParseErr)
 		return
 	}
 
 	employees, totalCount, err := h.service.GetEmployeesByDepartmentId(r.Context(), departmentId, page, limit)
 	if err != nil {
-		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

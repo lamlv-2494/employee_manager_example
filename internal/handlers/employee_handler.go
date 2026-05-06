@@ -19,7 +19,7 @@ func NewEmployeeHandler(service services.EmployeeService) *EmployeeHandler {
 
 func (h *EmployeeHandler) CreateEmployee(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
 		return
 	}
 
@@ -28,13 +28,13 @@ func (h *EmployeeHandler) CreateEmployee(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(&emp)
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, err.Error())
+		ResponseError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.service.CreateEmployee(r.Context(), &emp)
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, err.Error())
+		ResponseError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *EmployeeHandler) CreateEmployee(w http.ResponseWriter, r *http.Request)
 
 func (h *EmployeeHandler) GetEmployees(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, ErrMethodNotAllowed, http.StatusMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
 		return
 	}
 
@@ -52,14 +52,18 @@ func (h *EmployeeHandler) GetEmployees(w http.ResponseWriter, r *http.Request) {
 	limit, limitErr := strconv.Atoi(query.Get("limit"))
 
 	if pageErr != nil || limitErr != nil {
-		ResponseWithError(w, http.StatusBadRequest, ErrPageOrLimitInvalid)
+		ResponseError(w, http.StatusBadRequest, ErrPageOrLimitInvalid)
 		return
 	}
 
-	employees, totalCount, err := h.service.GetEmployees(r.Context(), page, limit)
+	// Search
+	keyword := query.Get("keyword")
+	position := query.Get("position")
+
+	employees, totalCount, err := h.service.GetEmployees(r.Context(), page, limit, keyword, position)
 
 	if err != nil {
-		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -73,20 +77,20 @@ func (h *EmployeeHandler) GetEmployees(w http.ResponseWriter, r *http.Request) {
 
 func (h *EmployeeHandler) GetEmployeeById(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		ResponseWithError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
 		return
 	}
 
 	employeeId, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
+		ResponseError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
 		return
 	}
 
 	employee, err := h.service.GetEmployeeById(r.Context(), employeeId)
 
 	if err != nil {
-		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -95,13 +99,13 @@ func (h *EmployeeHandler) GetEmployeeById(w http.ResponseWriter, r *http.Request
 
 func (h *EmployeeHandler) UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		ResponseWithError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
 		return
 	}
 
 	employeeId, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
+		ResponseError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
 		return
 	}
 
@@ -109,13 +113,13 @@ func (h *EmployeeHandler) UpdateEmployee(w http.ResponseWriter, r *http.Request)
 	defer r.Body.Close()
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, ErrInvalidRequestBody)
+		ResponseError(w, http.StatusBadRequest, ErrInvalidRequestBody)
 		return
 	}
 
 	err = h.service.UpdateEmployee(r.Context(), employeeId, req)
 	if err != nil {
-		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -124,17 +128,17 @@ func (h *EmployeeHandler) UpdateEmployee(w http.ResponseWriter, r *http.Request)
 
 func (h *EmployeeHandler) DeleteEmployee(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
+		ResponseError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
 		return
 	}
 	employeeId, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		ResponseWithError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
+		ResponseError(w, http.StatusBadRequest, ErrInvalidEmployeeId)
 		return
 	}
 	err = h.service.DeleteEmployee(r.Context(), employeeId)
 	if err != nil {
-		ResponseWithError(w, http.StatusInternalServerError, err.Error())
+		ResponseError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	ResponseSuccess(w, http.StatusNoContent, nil)
