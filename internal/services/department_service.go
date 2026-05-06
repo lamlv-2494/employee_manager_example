@@ -4,7 +4,7 @@ import (
 	"context"
 	. "employee_manager_example/internal/models"
 	"employee_manager_example/internal/repositories"
-	"employee_manager_example/internal/utils"
+	"employee_manager_example/internal/texts"
 	"errors"
 	"strings"
 )
@@ -29,7 +29,7 @@ func NewDepartmentService(repo repositories.DepartmentRepository) DepartmentServ
 func (d *departmentService) CreateDepartment(ctx context.Context, department *Department) error {
 	department.Name = strings.TrimSpace(department.Name)
 	if department.Name == "" {
-		return errors.New(utils.ErrDepartmentNameEmpty)
+		return errors.New(texts.DepartmentNameEmpty)
 	}
 	err := d.repro.CreateDepartment(ctx, department)
 	if err != nil {

@@ -1,0 +1,11 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Go binary
+/bin/
+*.exe
+
+# Go build cache
+/vendor/

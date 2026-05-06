@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	. "employee_manager_example/internal/models"
+	"employee_manager_example/internal/texts"
 	. "employee_manager_example/internal/utils"
 )
 
@@ -25,16 +26,15 @@ func NewDepartmentRepository(db *sql.DB) DepartmentRepository {
 
 // CreateDepartment implements [DepartmentRepository].
 func (d *departmentRepository) CreateDepartment(ctx context.Context, department *Department) error {
-	query := "INSERT INTO departments (name) VALUES (?)"
+	query := "INSERT INTO departments (name) VALUES (?)123"
 
 	res, err := d.db.ExecContext(ctx, query, department.Name)
-	if err != nil {
+	if LogError(texts.ExecuteContext, err) {
 		return err
 	}
 
 	id, err := res.LastInsertId()
-
-	if LogError(ErrLastInsertId, err) {
+	if LogError(texts.LastInsertId, err) {
 		return err
 	}
 
@@ -48,7 +48,7 @@ func (d *departmentRepository) GetDepartments(ctx context.Context, limit int, of
 
 	var totalCount int
 	err := d.db.QueryRowContext(ctx, countQuery).Scan(&totalCount)
-	if err != nil {
+	if LogError(texts.QueryRowErr, err) {
 		return nil, 0, err
 	}
 
@@ -58,7 +58,7 @@ func (d *departmentRepository) GetDepartments(ctx context.Context, limit int, of
 
 	query := "SELECT id, name FROM departments WHERE deleted_at IS NULL LIMIT ? OFFSET ?"
 	rows, err := d.db.QueryContext(ctx, query, limit, offset)
-	if LogError(LogErrQuery, err) {
+	if LogError(texts.QueryErr, err) {
 		return nil, 0, err
 	}
 	defer rows.Close()
@@ -68,7 +68,7 @@ func (d *departmentRepository) GetDepartments(ctx context.Context, limit int, of
 	for rows.Next() {
 		var department Department
 		err := rows.Scan(&department.ID, &department.Name)
-		if LogError(LogErrScan, err) {
+		if LogError(texts.ScanErr, err) {
 			return nil, 0, err
 		}
 		departments = append(departments, department)
@@ -82,7 +82,7 @@ func (d *departmentRepository) GetEmployeesByDepartmentId(ctx context.Context, d
 	countQuery := "SELECT COUNT(*) FROM employees WHERE department_id = ? AND deleted_at IS NULL"
 	var totalCount int
 	err := d.db.QueryRowContext(ctx, countQuery, departmentId).Scan(&totalCount)
-	if err != nil {
+	if LogError(texts.QueryRowErr, err) {
 		return nil, 0, err
 	}
 
@@ -97,7 +97,7 @@ func (d *departmentRepository) GetEmployeesByDepartmentId(ctx context.Context, d
 		"LIMIT ? OFFSET ?"
 
 	rows, err := d.db.QueryContext(ctx, dataQuery, departmentId, limit, offset)
-	if LogError(LogErrQuery, err) {
+	if LogError(texts.QueryErr, err) {
 		return nil, 0, err
 	}
 
@@ -107,7 +107,7 @@ func (d *departmentRepository) GetEmployeesByDepartmentId(ctx context.Context, d
 	for rows.Next() {
 		var emp Employee
 		err := rows.Scan(&emp.Id, &emp.Name, &emp.Age, &emp.Position, &emp.DepartmentId, &emp.Salary, &emp.DepartmentName)
-		if err != nil {
+		if LogError(texts.ScanErr, err) {
 			return nil, 0, err
 		}
 		employees = append(employees, emp)

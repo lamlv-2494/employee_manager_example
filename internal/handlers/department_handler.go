@@ -3,6 +3,7 @@ package handlers
 import (
 	"employee_manager_example/internal/models"
 	"employee_manager_example/internal/services"
+	"employee_manager_example/internal/texts"
 	. "employee_manager_example/internal/utils"
 	"encoding/json"
 	"net/http"
@@ -19,7 +20,7 @@ func NewDepartmentHandler(service services.DepartmentService) *DepartmentHandler
 
 func (h *DepartmentHandler) CreateDepartment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, texts.MethodNotAllowed)
 		return
 	}
 
@@ -43,7 +44,7 @@ func (h *DepartmentHandler) CreateDepartment(w http.ResponseWriter, r *http.Requ
 
 func (h *DepartmentHandler) GetDepartments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, texts.MethodNotAllowed)
 		return
 	}
 
@@ -51,8 +52,8 @@ func (h *DepartmentHandler) GetDepartments(w http.ResponseWriter, r *http.Reques
 	page, pageErr := strconv.Atoi(query.Get("page"))
 	limit, limitErr := strconv.Atoi(query.Get("limit"))
 	if pageErr != nil || limitErr != nil {
-		ResponseError(w, http.StatusBadRequest, ErrParseErr)
-
+		ResponseError(w, http.StatusBadRequest, texts.PageOrLimitInvalid)
+		return
 	}
 
 	departments, totalCount, err := h.service.GetDepartments(r.Context(), page, limit)
@@ -71,7 +72,7 @@ func (h *DepartmentHandler) GetDepartments(w http.ResponseWriter, r *http.Reques
 
 func (h *DepartmentHandler) GetEmployeesByDepartmentId(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		ResponseError(w, http.StatusMethodNotAllowed, ErrMethodNotAllowed)
+		ResponseError(w, http.StatusMethodNotAllowed, texts.MethodNotAllowed)
 		return
 	}
 
@@ -80,7 +81,7 @@ func (h *DepartmentHandler) GetEmployeesByDepartmentId(w http.ResponseWriter, r 
 	page, pageErr := strconv.Atoi(query.Get("page"))
 	limit, limitErr := strconv.Atoi(query.Get("limit"))
 	if departmentErr != nil || pageErr != nil || limitErr != nil {
-		ResponseError(w, http.StatusBadRequest, ErrParseErr)
+		ResponseError(w, http.StatusBadRequest, texts.InvalidDepartmentId)
 		return
 	}
 
