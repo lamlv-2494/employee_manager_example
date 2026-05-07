@@ -12,6 +12,10 @@ import (
 )
 
 func ExportToJson(data []models.Employee) error {
+	if _, err := os.Stat("exports"); os.IsNotExist(err) {
+		os.MkdirAll("exports", os.ModePerm)
+	}
+
 	filename := "exports/employees.json"
 	file, err := os.Create(filename)
 	if err != nil {
@@ -30,6 +34,10 @@ func ExportToJson(data []models.Employee) error {
 }
 
 func ExportToCSV(data []models.Employee) error {
+	if _, err := os.Stat("exports"); os.IsNotExist(err) {
+		os.MkdirAll("exports", os.ModePerm)
+	}
+
 	filename := "exports/employees.csv"
 	file, err := os.Create(filename)
 	if err != nil {
