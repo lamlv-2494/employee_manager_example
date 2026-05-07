@@ -33,4 +33,9 @@ const (
 	QueryRowErr     = "Query row error"
 	RowsAffected    = "Rows affected error"
 	LastInsertId    = "Can't get last insert id"
+
+	// Export
+	ErrEncodeJSON     = "failed to encode data to JSON: "
+	ErrWriteCSVHeader = "failed to write CSV header: "
+	ErrWriteCSVRecord = "failed to write CSV record: "
 )

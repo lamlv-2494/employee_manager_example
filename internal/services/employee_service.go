@@ -5,8 +5,13 @@ import (
 	. "employee_manager_example/internal/models"
 	"employee_manager_example/internal/repositories"
 	"employee_manager_example/internal/texts"
+	"employee_manager_example/internal/utils"
 	"errors"
+	"fmt"
+	"log"
 	"strings"
+	"sync"
+	"time"
 )
 
 type EmployeeService interface {
@@ -19,6 +24,8 @@ type EmployeeService interface {
 	UpdateEmployee(ctx context.Context, id int, req UpdateEmployeeRequest) error
 
 	DeleteEmployee(ctx context.Context, id int) error
+
+	ExportData(ctx context.Context) error
 }
 
 type employeeService struct {
@@ -93,5 +100,75 @@ func (e *employeeService) DeleteEmployee(ctx context.Context, id int) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// ExecuteConcurrentExport implements [EmployeeService].
+func (e *employeeService) ExportData(ctx context.Context) error {
+	fmt.Println("⏳ [1/3] Getting data from MySQL...")
+	startTime := time.Now()
+
+	employees, totalCount, err := e.repo.GetEmployees(ctx, 0, 0, "", "")
+	if err != nil {
+		log.Fatalf("Error when get data from SQL: %v", err)
+	}
+
+	fmt.Printf("✅ Fetched %d employees from DB. Time taken: %v\n", totalCount, time.Since(startTime))
+
+	if totalCount == 0 {
+		fmt.Println("No data to export!")
+		return errors.New("No data to export!")
+	}
+
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+
+	totalFilesCreated := 0
+	totalRecordsExported := 0
+
+	fmt.Println("⏳ [2/3] start writing JSON and CSV files parallel...")
+	exportStartTime := time.Now()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := utils.ExportToJson(employees)
+		if err != nil {
+			log.Printf("Error while export data to JSON: %v", err)
+			return
+		}
+
+		mutex.Lock()
+		totalFilesCreated++
+		totalRecordsExported += len(employees)
+		mutex.Unlock()
+		fmt.Println("   -> [JSON] Done file employees.json")
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := utils.ExportToCSV(employees)
+		if err != nil {
+			log.Printf("Error while export data to CSV: %v", err)
+			return
+		}
+
+		mutex.Lock()
+		totalFilesCreated++
+		totalRecordsExported += len(employees)
+		mutex.Unlock()
+		fmt.Println("   -> [CSV] Done file employees.csv")
+	}()
+
+	wg.Wait()
+
+	fmt.Println("✅ [3/3] Export Done!")
+	fmt.Println("=====================================")
+	fmt.Printf("[FILE] File created successfully  : %d files\n", totalFilesCreated)
+	fmt.Printf("[DATA] Total records exported     : %d records\n", totalRecordsExported)
+	fmt.Printf("[TIME] Writing file times         : %v\n", time.Since(exportStartTime))
+	fmt.Printf("[DONE] Total times                : %v\n", time.Since(startTime))
+	fmt.Println("=====================================")
 	return nil
 }
