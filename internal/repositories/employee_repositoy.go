@@ -52,7 +52,7 @@ func (e *employeeRepository) CreateEmployee(ctx context.Context, employee *Emplo
 }
 
 // GetEmployees implements [EmployeeRepository].
-func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet int, keyword, position string) ([]Employee, int, error) {
+func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offset int, keyword, position string) ([]Employee, int, error) {
 	// Count total employees in DB
 	var whereClause []string
 	var args []any
@@ -79,8 +79,13 @@ func (e *employeeRepository) GetEmployees(ctx context.Context, limit int, offet 
 	}
 
 	// Get employees from DB
-	query := "SELECT id, name, age, position, department_id, salary FROM employees WHERE " + where + " LIMIT ? OFFSET ?"
-	args = append(args, limit, offet)
+	query := "SELECT id, name, age, position, department_id, salary FROM employees WHERE " + where
+
+	if limit > 0 && offset >= 0 {
+		query += " LIMIT ? OFFSET ?"
+		args = append(args, limit, offset)
+	}
+
 	rows, err := e.db.QueryContext(ctx, query, args...)
 	if LogError(texts.QueryErr, err) {
 		return nil, 0, err

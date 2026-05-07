@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"database/sql"
+	"fmt"
 	"os"
 	"strings"
 
@@ -57,6 +59,11 @@ func main() {
 	appHandlers := &handlers.AppHandler{
 		EmployeeHandler:   employeeHander,
 		DepartmentHandler: departmentHandler,
+	}
+
+	err := employeeService.ExportData(context.Background())
+	if err != nil {
+		fmt.Println("Export failure:", err)
 	}
 
 	defer db.Close()
